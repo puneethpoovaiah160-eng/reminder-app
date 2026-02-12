@@ -67,10 +67,13 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<!-- Let Spring Boot Maven plugin auto-detect the main class -->
-			</plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+    <configuration>
+        <mainClass>com.example.emay.EmayApplication</mainClass>
+    </configuration>
+</plugin>
+
 		</plugins>
 	</build>
 
