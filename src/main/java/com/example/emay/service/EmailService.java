@@ -16,8 +16,12 @@ public class EmailService {
     @Value("${reminder.recipient.email}")
     private String recipientEmail;
 
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
     public void sendReminderEmail(Reminder reminder) {
         SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);  // ← ADDED THIS LINE
         message.setTo(recipientEmail);
         message.setSubject("Reminder: " + reminder.getTitle());
         StringBuilder sb = new StringBuilder();
