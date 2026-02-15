@@ -9,6 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
@@ -24,8 +26,11 @@ public class ReminderScheduler {
 
     @Scheduled(fixedRate = 60000)
     public void checkReminders() {
-        LocalDateTime now = LocalDateTime.now();
-        logger.info("Checking for pending reminders before: {}", now);
+        // Get current time in Asia/Kolkata timezone
+        ZonedDateTime nowIndia = ZonedDateTime.now(ZoneId.of("Asia/Kolkata"));
+        LocalDateTime now = nowIndia.toLocalDateTime();
+        
+        logger.info("Checking for pending reminders before: {} (India time)", now);
         List<Reminder> due = reminderRepository.findByStatusAndReminderTimeBefore("PENDING", now);
         logger.info("Found {} reminders due", due.size());
         
