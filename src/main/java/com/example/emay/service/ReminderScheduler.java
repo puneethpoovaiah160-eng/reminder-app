@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
 public class ReminderScheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(ReminderScheduler.class);
+    private static final ZoneId INDIA_ZONE = ZoneId.of("Asia/Kolkata");
 
     @Autowired
     private ReminderRepository reminderRepository;
@@ -26,9 +26,8 @@ public class ReminderScheduler {
 
     @Scheduled(fixedRate = 60000)
     public void checkReminders() {
-        // Get current time in Asia/Kolkata timezone
-        ZonedDateTime nowIndia = ZonedDateTime.now(ZoneId.of("Asia/Kolkata"));
-        LocalDateTime now = nowIndia.toLocalDateTime();
+        // CRITICAL: Get current time in India timezone
+        LocalDateTime now = LocalDateTime.now(INDIA_ZONE);
         
         logger.info("Checking for pending reminders before: {} (India time)", now);
         List<Reminder> due = reminderRepository.findByStatusAndReminderTimeBefore("PENDING", now);
@@ -39,7 +38,7 @@ public class ReminderScheduler {
                 logger.info("Sending reminder email for id={}, title={}", r.getId(), r.getTitle());
                 emailService.sendReminderEmail(r);
                 r.setStatus("COMPLETED");
-                r.setCompletedAt(LocalDateTime.now());
+                r.setCompletedAt(LocalDateTime.now(INDIA_ZONE));
                 reminderRepository.save(r);
                 logger.info("Successfully processed reminder id={}", r.getId());
             } catch (Exception ex) {
