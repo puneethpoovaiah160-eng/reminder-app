@@ -1,77 +1,207 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Emay Reminders</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: 24px auto; }
-    form { background:#f7f7f7;padding:16px;border-radius:6px;margin-bottom:16px }
-    label { display:block;margin-top:8px }
-    input, textarea { width:100%; padding:8px; box-sizing:border-box }
-    .columns { display:flex; gap:16px }
-    .col { flex:1 }
-    .box { background:#fff;padding:12px;border-radius:6px;border:1px solid #eee }
-    button { margin-top:8px;padding:8px 12px }
-    .reminder { border-bottom:1px solid #eee;padding:8px 0 }
-    .small { color:#666;font-size:0.9em }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Emay – Smart Reminders</title>
+
+<style>
+  :root{
+    --primary:#4f46e5;
+    --primary-dark:#4338ca;
+    --border:#e5e7eb;
+    --text:#111827;
+    --muted:#6b7280;
+    --bg:#f3f4f6;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg,#eef2ff,#f9fafb);
+    color:var(--text);
+  }
+
+  .container{
+    max-width:1100px;
+    margin:40px auto;
+    padding:20px;
+  }
+
+  h1{
+    text-align:center;
+    margin-bottom:25px;
+  }
+
+  /* CARD */
+  .card{
+    background:white;
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.06);
+    border:1px solid var(--border);
+  }
+
+  /* FORM */
+  form{
+    margin-bottom:20px;
+  }
+
+  label{
+    display:block;
+    font-weight:600;
+    margin-top:12px;
+    margin-bottom:6px;
+  }
+
+  input, textarea{
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    font-size:14px;
+  }
+
+  textarea{
+    min-height:70px;
+    resize:vertical;
+  }
+
+  button{
+    margin-top:15px;
+    background:var(--primary);
+    color:white;
+    border:none;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+  }
+
+  button:hover{
+    background:var(--primary-dark);
+  }
+
+  /* GRID */
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-top:20px;
+  }
+
+  /* REMINDER ITEM */
+  .reminder{
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+  }
+
+  .reminder:last-child{
+    border-bottom:none;
+  }
+
+  .time{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:2px;
+  }
+
+  .empty{
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  @media(max-width:800px){
+    .grid{ grid-template-columns:1fr; }
+  }
+</style>
 </head>
+
 <body>
-  <h1>Emay Reminders</h1>
+<div class="container">
+  <h1>📧 Emay Reminder System</h1>
 
-  <form id="reminderForm">
-    <label>Title<input type="text" id="title" required></label>
-    <label>Description<textarea id="description"></textarea></label>
-    <label>Reminder Time<input type="datetime-local" id="reminderTime" required></label>
-    <button type="submit">Create Reminder</button>
-  </form>
+  <div class="card">
+    <form id="reminderForm">
+      <label>Title</label>
+      <input type="text" id="title" required>
 
-  <div class="columns">
-    <div class="col">
-      <h2>Upcoming</h2>
-      <div id="upcoming" class="box"></div>
-    </div>
-    <div class="col">
-      <h2>History</h2>
-      <div id="history" class="box"></div>
-    </div>
+      <label>Description</label>
+      <textarea id="description"></textarea>
+
+      <label>Reminder Time</label>
+      <input type="datetime-local" id="reminderTime" required>
+
+      <button type="submit">Create Reminder</button>
+    </form>
   </div>
 
-  <script>
-    async function loadLists(){
-      const up = await fetch('/api/reminders/upcoming').then(r=>r.json());
-      const hist = await fetch('/api/reminders/history').then(r=>r.json());
+  <div class="grid">
+    <div class="card">
+      <h2>Upcoming</h2>
+      <div id="upcoming"></div>
+    </div>
 
-      const upEl = document.getElementById('upcoming');
-      upEl.innerHTML = up.length ? up.map(r=>`<div class="reminder"><strong>${r.title}</strong><div class="small">${r.reminderTime}</div><div>${r.description||''}</div></div>`).join('') : '<div class="small">No upcoming reminders</div>';
+    <div class="card">
+      <h2>History</h2>
+      <div id="history"></div>
+    </div>
+  </div>
+</div>
 
-      const histEl = document.getElementById('history');
-      histEl.innerHTML = hist.length ? hist.map(r=>`<div class="reminder"><strong>${r.title}</strong><div class="small">${r.reminderTime} • completed ${r.completedAt||''}</div><div>${r.description||''}</div></div>`).join('') : '<div class="small">No history</div>';
-    }
+<script>
+async function loadLists(){
+  const up = await fetch('/api/reminders/upcoming').then(r=>r.json());
+  const hist = await fetch('/api/reminders/history').then(r=>r.json());
 
-    document.getElementById('reminderForm').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const title = document.getElementById('title').value;
-      const description = document.getElementById('description').value;
-      const reminderTime = document.getElementById('reminderTime').value; // format: yyyy-MM-ddTHH:mm
+  const upEl = document.getElementById('upcoming');
+  upEl.innerHTML = up.length
+    ? up.map(r=>`
+      <div class="reminder">
+        <strong>${r.title}</strong>
+        <div class="time">${r.reminderTime}</div>
+        <div>${r.description||''}</div>
+      </div>
+    `).join('')
+    : '<div class="empty">No upcoming reminders</div>';
 
-      const payload = { title, description, reminderTime };
+  const histEl = document.getElementById('history');
+  histEl.innerHTML = hist.length
+    ? hist.map(r=>`
+      <div class="reminder">
+        <strong>${r.title}</strong>
+        <div class="time">${r.reminderTime}</div>
+        <div>${r.description||''}</div>
+      </div>
+    `).join('')
+    : '<div class="empty">No history</div>';
+}
 
-      await fetch('/api/reminders', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify(payload)
-      });
+document.getElementById('reminderForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
 
-      document.getElementById('title').value='';
-      document.getElementById('description').value='';
-      document.getElementById('reminderTime').value='';
-      setTimeout(loadLists, 300);
-    });
+  const payload = {
+    title: document.getElementById('title').value,
+    description: document.getElementById('description').value,
+    reminderTime: document.getElementById('reminderTime').value
+  };
 
-    loadLists();
-    setInterval(loadLists, 30000);
-  </script>
+  await fetch('/api/reminders', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  e.target.reset();
+  setTimeout(loadLists, 300);
+});
+
+loadLists();
+setInterval(loadLists, 30000);
+</script>
+
 </body>
 </html>
+
