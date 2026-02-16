@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,26 +23,34 @@ public class EmailService {
 
     public void sendReminderEmail(Reminder reminder) {
 
-        RestTemplate restTemplate = new RestTemplate();
+        try {
+            RestTemplate restTemplate = new RestTemplate();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Map<String, String> body = new HashMap<>();
-        body.put("to", recipientEmail);
-        body.put("subject", "Reminder: " + reminder.getTitle());
+            Map<String, String> body = new HashMap<>();
+            body.put("to", recipientEmail);
+            body.put("subject", "Reminder: " + reminder.getTitle());
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("Title: ").append(reminder.getTitle()).append("\n\n");
-        if (reminder.getDescription() != null) {
-            sb.append(reminder.getDescription()).append("\n\n");
+            StringBuilder sb = new StringBuilder();
+            sb.append("Title: ").append(reminder.getTitle()).append("\n\n");
+            if (reminder.getDescription() != null) {
+                sb.append(reminder.getDescription()).append("\n\n");
+            }
+            sb.append("When: ").append(reminder.getReminderTime());
+
+            body.put("text", sb.toString());
+
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
+
+            ResponseEntity<String> response =
+                    restTemplate.postForEntity(EMAIL_API_URL, request, String.class);
+
+            System.out.println("EMAIL API RESPONSE: " + response.getBody());
+
+        } catch (Exception e) {
+            System.out.println("EMAIL FAILED: " + e.getMessage());
         }
-        sb.append("When: ").append(reminder.getReminderTime());
-
-        body.put("text", sb.toString());
-
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
-
-        restTemplate.postForEntity(EMAIL_API_URL, request, String.class);
     }
 }
