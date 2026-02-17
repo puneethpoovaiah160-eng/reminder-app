@@ -1,207 +1,443 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Emay – Smart Reminders</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SYS.EMAY // TERMINAL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-color: #050505;
+      --panel-bg: rgba(10, 10, 10, 0.95);
+      --primary: #238636;
+      --secondary: #00cccc;
+      --alert: #ff3333;
+      --muted: #444444;
+      --text: #e0e0e0;
+      --border: 1px solid #1a1a1a;
+      --glow: 0 0 10px rgba(35, 134, 54, 0.2);
+    }
 
-<style>
-  :root{
-    --primary:#4f46e5;
-    --primary-dark:#4338ca;
-    --border:#e5e7eb;
-    --text:#111827;
-    --muted:#6b7280;
-    --bg:#f3f4f6;
-  }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  *{box-sizing:border-box}
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: var(--bg-color);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 14px;
+      background-image: 
+        linear-gradient(rgba(18, 18, 18, 0.8) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 18, 18, 0.8) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
 
-  body{
-    margin:0;
-    font-family: Inter, system-ui, -apple-system, sans-serif;
-    background: linear-gradient(135deg,#eef2ff,#f9fafb);
-    color:var(--text);
-  }
+    .scanlines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0,0,0,0.2) 50%,
+        rgba(0,0,0,0.2)
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.6;
+    }
 
-  .container{
-    max-width:1100px;
-    margin:40px auto;
-    padding:20px;
-  }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      position: relative;
+      z-index: 1;
+    }
 
-  h1{
-    text-align:center;
-    margin-bottom:25px;
-  }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--primary);
+      padding-bottom: 5px;
+      margin-bottom: 40px;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      color: var(--primary);
+      text-shadow: var(--glow);
+    }
 
-  /* CARD */
-  .card{
-    background:white;
-    border-radius:12px;
-    padding:18px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.06);
-    border:1px solid var(--border);
-  }
+    .blink {
+      animation: blink 1s step-end infinite;
+    }
 
-  /* FORM */
-  form{
-    margin-bottom:20px;
-  }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
 
-  label{
-    display:block;
-    font-weight:600;
-    margin-top:12px;
-    margin-bottom:6px;
-  }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0;
+      letter-spacing: -1px;
+    }
 
-  input, textarea{
-    width:100%;
-    padding:10px;
-    border-radius:8px;
-    border:1px solid var(--border);
-    font-size:14px;
-  }
+    .subtitle {
+      color: var(--secondary);
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+      display: block;
+    }
 
-  textarea{
-    min-height:70px;
-    resize:vertical;
-  }
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--muted);
+      margin-bottom: 30px;
+      position: relative;
+    }
 
-  button{
-    margin-top:15px;
-    background:var(--primary);
-    color:white;
-    border:none;
-    padding:10px 14px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:600;
-  }
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px;
+      width: 10px; height: 10px;
+      border-top: 2px solid var(--primary);
+      border-left: 2px solid var(--primary);
+    }
 
-  button:hover{
-    background:var(--primary-dark);
-  }
+    .panel::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; right: -1px;
+      width: 10px; height: 10px;
+      border-bottom: 2px solid var(--primary);
+      border-right: 2px solid var(--primary);
+    }
 
-  /* GRID */
-  .grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-    margin-top:20px;
-  }
+    .panel-header {
+      background: rgba(35, 134, 54, 0.05);
+      border-bottom: 1px solid var(--muted);
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      color: var(--secondary);
+    }
 
-  /* REMINDER ITEM */
-  .reminder{
-    padding:10px 0;
-    border-bottom:1px solid var(--border);
-  }
+    .panel-body {
+      padding: 20px;
+    }
 
-  .reminder:last-child{
-    border-bottom:none;
-  }
+    .form-group {
+      margin-bottom: 25px;
+      position: relative;
+    }
 
-  .time{
-    color:var(--muted);
-    font-size:12px;
-    margin-top:2px;
-  }
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
 
-  .empty{
-    color:var(--muted);
-    font-size:14px;
-  }
+    input, textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--muted);
+      color: var(--primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      padding: 10px 0;
+      transition: all 0.3s;
+      border-radius: 0;
+    }
 
-  @media(max-width:800px){
-    .grid{ grid-template-columns:1fr; }
-  }
-</style>
+    input:focus, textarea:focus {
+      outline: none;
+      border-bottom: 1px solid var(--primary);
+      background: rgba(35, 134, 54, 0.02);
+      box-shadow: 0 10px 20px -10px rgba(35, 134, 54, 0.1);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      padding: 12px 30px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary);
+      color: black;
+      box-shadow: 0 0 15px var(--primary);
+    }
+
+    .btn::before {
+      content: '>_ ';
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .log-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-left: 2px solid var(--muted);
+      padding-left: 15px;
+      margin-bottom: 15px;
+      transition: 0.2s;
+    }
+
+    .log-item:hover {
+      border-left-color: var(--primary);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .log-content h3 {
+      font-size: 1rem;
+      color: var(--text);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .log-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .log-time {
+      color: var(--secondary);
+      font-size: 0.8rem;
+      white-space: nowrap;
+      margin-left: 10px;
+    }
+
+    .badge {
+      background: var(--muted);
+      color: #000;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+    }
+
+    .panel:hover .badge {
+      background: var(--primary);
+    }
+
+    .success-toast {
+      border: 1px solid var(--primary);
+      background: rgba(35, 134, 54, 0.1);
+      color: var(--primary);
+      padding: 10px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #000; }
+    ::-webkit-scrollbar-thumb { background: #333; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
 </head>
-
 <body>
-<div class="container">
-  <h1>📧 Emay Reminder System</h1>
-
-  <div class="card">
-    <form id="reminderForm">
-      <label>Title</label>
-      <input type="text" id="title" required>
-
-      <label>Description</label>
-      <textarea id="description"></textarea>
-
-      <label>Reminder Time</label>
-      <input type="datetime-local" id="reminderTime" required>
-
-      <button type="submit">Create Reminder</button>
-    </form>
-  </div>
-
-  <div class="grid">
-    <div class="card">
-      <h2>Upcoming</h2>
-      <div id="upcoming"></div>
+  <div class="scanlines"></div>
+  
+  <div class="container">
+    
+    <div class="top-bar">
+      <span>SYS.EMAY.V2.0</span>
+      <span>USER: ROOT</span>
+      <span>STATUS: ONLINE <span class="blink">█</span></span>
     </div>
 
-    <div class="card">
-      <h2>History</h2>
-      <div id="history"></div>
+    <header>
+      <h1>TERMINAL_REMINDERS</h1>
+      <span class="subtitle">./execute_protocol --task-management</span>
+    </header>
+
+    <div id="successMessage" class="success-toast">
+      >> PROCESS COMPLETED SUCCESSFULLY
     </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span>INPUT_STREAM</span>
+        <span>[WRITE_MODE]</span>
+      </div>
+      <div class="panel-body">
+        <form id="reminderForm">
+          <div class="form-group">
+            <label>Title_</label>
+            <input type="text" id="title" placeholder="Init task sequence..." required autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label>Parameters (Desc)_</label>
+            <textarea id="description" rows="2" placeholder="Null parameters acceptable..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>T-Minus (Time)_</label>
+            <input type="datetime-local" id="reminderTime" required>
+          </div>
+
+          <button type="submit" class="btn">INITIALIZE REMINDER</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-header">
+          <span>ACTIVE_PROCESSES</span>
+          <span class="badge" id="upcomingCount">00</span>
+        </div>
+        <div class="panel-body" id="upcoming">
+          <div style="color: var(--muted); text-align: center;">// AWAITING DATA...</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span>SYSTEM_LOGS</span>
+          <span class="badge" id="historyCount">00</span>
+        </div>
+        <div class="panel-body" id="history">
+          <div style="color: var(--muted); text-align: center;">// NO HISTORY FOUND</div>
+        </div>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<script>
-async function loadLists(){
-  const up = await fetch('/api/reminders/upcoming').then(r=>r.json());
-  const hist = await fetch('/api/reminders/history').then(r=>r.json());
+  <script>
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', { 
+        month: '2-digit', day: '2-digit', 
+        hour: '2-digit', minute: '2-digit', hour12: false 
+      }).replace(',', ' >');
+    }
 
-  const upEl = document.getElementById('upcoming');
-  upEl.innerHTML = up.length
-    ? up.map(r=>`
-      <div class="reminder">
-        <strong>${r.title}</strong>
-        <div class="time">${r.reminderTime}</div>
-        <div>${r.description||''}</div>
-      </div>
-    `).join('')
-    : '<div class="empty">No upcoming reminders</div>';
+    async function loadLists() {
+      try {
+        const [upcoming, history] = await Promise.all([
+          fetch('/api/reminders/upcoming').then(r => r.json()),
+          fetch('/api/reminders/history').then(r => r.json())
+        ]);
 
-  const histEl = document.getElementById('history');
-  histEl.innerHTML = hist.length
-    ? hist.map(r=>`
-      <div class="reminder">
-        <strong>${r.title}</strong>
-        <div class="time">${r.reminderTime}</div>
-        <div>${r.description||''}</div>
-      </div>
-    `).join('')
-    : '<div class="empty">No history</div>';
-}
+        document.getElementById('upcomingCount').textContent = upcoming.length.toString().padStart(2, '0');
+        document.getElementById('historyCount').textContent = history.length.toString().padStart(2, '0');
 
-document.getElementById('reminderForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
+        const upcomingEl = document.getElementById('upcoming');
+        if (upcoming.length === 0) {
+          upcomingEl.innerHTML = `<div style="color: var(--muted)">// QUEUE EMPTY</div>`;
+        } else {
+          upcomingEl.innerHTML = upcoming.map(r => `
+            <div class="log-item">
+              <div class="log-content">
+                <h3>${r.title}</h3>
+                <div class="log-meta">opt: ${r.description || 'null'}</div>
+              </div>
+              <div class="log-time">${formatDate(r.reminderTime)}</div>
+            </div>
+          `).join('');
+        }
 
-  const payload = {
-    title: document.getElementById('title').value,
-    description: document.getElementById('description').value,
-    reminderTime: document.getElementById('reminderTime').value
-  };
+        const historyEl = document.getElementById('history');
+        if (history.length === 0) {
+          historyEl.innerHTML = `<div style="color: var(--muted)">// LOGS EMPTY</div>`;
+        } else {
+          historyEl.innerHTML = history.map(r => `
+            <div class="log-item" style="opacity: 0.6">
+              <div class="log-content">
+                <h3>${r.title}</h3>
+                <div class="log-meta">completed</div>
+              </div>
+              <div class="log-time">${formatDate(r.completedAt || r.reminderTime)}</div>
+            </div>
+          `).join('');
+        }
+      } catch (error) {
+        console.error('System Error:', error);
+      }
+    }
 
-  await fetch('/api/reminders', {
-    method:'POST',
-    headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify(payload)
-  });
+    document.getElementById('reminderForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = e.target.querySelector('.btn');
+      const originalText = btn.textContent;
+      btn.textContent = 'EXECUTING...';
+      
+      const payload = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        reminderTime: document.getElementById('reminderTime').value
+      };
 
-  e.target.reset();
-  setTimeout(loadLists, 300);
-});
+      try {
+        await fetch('/api/reminders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-loadLists();
-setInterval(loadLists, 30000);
-</script>
+        const successMsg = document.getElementById('successMessage');
+        successMsg.style.display = 'block';
+        setTimeout(() => successMsg.style.display = 'none', 3000);
 
+        e.target.reset();
+        setTimeout(loadLists, 300);
+      } catch (error) {
+        alert('CRITICAL ERROR: WRITE FAILED');
+      } finally {
+        btn.textContent = originalText;
+      }
+    });
+
+    loadLists();
+    setInterval(loadLists, 30000);
+  </script>
 </body>
 </html>
-
